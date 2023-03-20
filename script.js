@@ -7,8 +7,8 @@ var DIRECTION = {
 	RIGHT: 4
 };
 
-var rounds = [5, 5, 3, 3, 2];
-var colors = ['#1abc9c', '#2ecc71', '#3498db', '#e74c3c', '#9b59b6'];
+var rounds = [3, 3, 1, 1, 1];
+var colors = ['#BC7A1A', '#1ABABC', '#236162', '#5269DE', '#DE52D3'];
 
 // The ball object (The cube that bounces back and forth)
 var Ball = {
@@ -20,7 +20,7 @@ var Ball = {
 			y: (this.canvas.height / 2) - 9,
 			moveX: DIRECTION.IDLE,
 			moveY: DIRECTION.IDLE,
-			speed: incrementedSpeed || 9
+			speed: incrementedSpeed || 10
 		};
 	}
 };
@@ -29,13 +29,13 @@ var Ball = {
 var Paddle = {
 	new: function (side) {
 		return {
-			width: 18,
-			height: 70,
-			x: side === 'left' ? 150 : this.canvas.width - 150,
+			width: 30,
+			height: 50,
+			x: side === 'left' ? 130 : this.canvas.width - 150,
 			y: (this.canvas.height / 2) - 35,
 			score: 0,
 			move: DIRECTION.IDLE,
-			speed: 10
+			speed: 20
 		};
 	}
 };
@@ -59,7 +59,7 @@ var Game = {
 		this.running = this.over = false;
 		this.turn = this.paddle;
 		this.timer = this.round = 0;
-		this.color = '#2c3e50';
+		this.color = '#00BC25';
 
 		Pong.menu();
 		Pong.listen();
@@ -110,21 +110,53 @@ var Game = {
 		);
 
 		// Change the canvas color;
-		this.context.fillStyle = '#ffffff';
+		this.context.fillStyle = '#BC0000';
 
 		// Draw the 'press any key to begin' text
-		this.context.fillText('Press any key to begin',
+		this.context.fillText('Please press any key to begin!',
 			this.canvas.width / 2,
 			this.canvas.height / 2 + 15
 		);
+	},
+
+    displayText: function (text) {
+		Pong.context.font = '50px Courier New';
+		Pong.context.fillStyle = this.color;
+
+		Pong.context.fillRect(
+			Pong.canvas.width / 2 - 350,
+			Pong.canvas.height - 150,
+			700,
+			100
+		);
+
+		Pong.context.fillStyle = '#ffffff';
+
+		Pong.context.fillText(text,
+			Pong.canvas.width / 2,
+			Pong.canvas.height / 2 + 15
+		);
+
+		setTimeout(function () {
+			Pong = Object.assign({}, Game);
+			Pong.initialize();
+		}, 3000);
 	},
 
 	// Update all objects (move the player, paddle, ball, increment the score, etc.)
 	update: function () {
 		if (!this.over) {
 			// If the ball collides with the bound limits - correct the x and y coords.
-			if (this.ball.x <= 0) Pong._resetTurn.call(this, this.paddle, this.player);
-			if (this.ball.x >= this.canvas.width - this.ball.width) Pong._resetTurn.call(this, this.player, this.paddle);
+			if (this.ball.x <= 0) {
+                document.getElementById("msg").innerHTML = "AI has scored!";
+                setTimeout(function () { document.getElementById("msg").innerHTML ="" }, 1000);
+                Pong._resetTurn.call(this, this.paddle, this.player);
+            }
+			if (this.ball.x >= this.canvas.width - this.ball.width) {
+                document.getElementById("msg").innerHTML = "User has scored!";
+                setTimeout(function () { document.getElementById("msg").innerHTML ="" }, 1000);
+                Pong._resetTurn.call(this, this.player, this.paddle);
+            }
 			if (this.ball.y <= 0) this.ball.moveY = DIRECTION.DOWN;
 			if (this.ball.y >= this.canvas.height - this.ball.height) this.ball.moveY = DIRECTION.UP;
 
@@ -146,18 +178,18 @@ var Game = {
 			else if (this.player.y >= (this.canvas.height - this.player.height)) this.player.y = (this.canvas.height - this.player.height);
 
 			// Move ball in intended direction based on moveY and moveX values
-			if (this.ball.moveY === DIRECTION.UP) this.ball.y -= (this.ball.speed / 1.5);
-			else if (this.ball.moveY === DIRECTION.DOWN) this.ball.y += (this.ball.speed / 1.5);
+			if (this.ball.moveY === DIRECTION.UP) this.ball.y -= (this.ball.speed / 1.3);
+			else if (this.ball.moveY === DIRECTION.DOWN) this.ball.y += (this.ball.speed / 1.3);
 			if (this.ball.moveX === DIRECTION.LEFT) this.ball.x -= this.ball.speed;
 			else if (this.ball.moveX === DIRECTION.RIGHT) this.ball.x += this.ball.speed;
 
 			// Handle paddle (AI) UP and DOWN movement
 			if (this.paddle.y > this.ball.y - (this.paddle.height / 2)) {
-				if (this.ball.moveX === DIRECTION.RIGHT) this.paddle.y -= this.paddle.speed / 1.5;
+				if (this.ball.moveX === DIRECTION.RIGHT) this.paddle.y -= this.paddle.speed / 1.3;
 				else this.paddle.y -= this.paddle.speed / 4;
 			}
 			if (this.paddle.y < this.ball.y - (this.paddle.height / 2)) {
-				if (this.ball.moveX === DIRECTION.RIGHT) this.paddle.y += this.paddle.speed / 1.5;
+				if (this.ball.moveX === DIRECTION.RIGHT) this.paddle.y += this.paddle.speed / 1.3;
 				else this.paddle.y += this.paddle.speed / 4;
 			}
 
@@ -196,7 +228,7 @@ var Game = {
 				setTimeout(function () { Pong.endGameMenu('Winner!'); }, 1000);
 			} else {
 				// If there is another round, reset all the values and increment the round number.
-				this.color = this._generateRoundColor();
+                this.color = this._generateRoundColor();
 				this.player.score = this.paddle.score = 0;
 				this.player.speed += 0.5;
 				this.paddle.speed += 1;
